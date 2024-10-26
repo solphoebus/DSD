@@ -1,0 +1,55 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: Ali Can ATICI
+// 
+// Create Date:    23:35:19 12/28/2010 
+// Design Name: 
+// Module Name:    debouncer 
+// Project Name: 
+// Target Devices: Nexys 4 DDR
+// Tool versions: 
+// Description: This module debounces a noisy input signal from a push button.
+//              It outputs a clean signal that can be used in other modules.
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module debouncer(
+    input clk,                // Clock signal
+    input rst,                // Reset signal
+    input noisy_in,          // Noisy input from the push button
+    output reg clean_out      // Clean output signal
+);
+
+reg [15:0] counter;          // Counter for debouncing
+reg noisy_in_reg;            // Register to hold previous noisy input state
+
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        clean_out <= 0;       // Reset clean output to 0
+        counter <= 0;         // Reset counter
+        noisy_in_reg <= 0;    // Reset registered noisy input
+    end else begin
+        // Shift the noisy input into the register
+        noisy_in_reg <= noisy_in;
+
+        // If the current noisy input is different from the registered one,
+        // reset the counter. Otherwise, increment it.
+        if (noisy_in_reg != noisy_in) begin
+            counter <= 0;      // Reset counter on change
+        end else if (counter < 16'hFFFF) begin
+            counter <= counter + 1; // Increment counter if stable
+        end
+
+        // If counter is stable for a certain period, update clean_out
+        if (counter == 16'hFFFF) begin
+            clean_out <= noisy_in; // Set clean output to current state of noisy input
+        end
+    end
+end
+
+endmodule
