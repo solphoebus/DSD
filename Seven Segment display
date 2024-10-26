@@ -1,0 +1,115 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date:    19:32:18 01/04/2010 
+// Design Name: 
+// Module Name:    ssd 
+// Project Name: 
+// Target Devices: Nexys 4 DDR
+// Tool versions: 
+// Description: This module drives the seven segment displays. It has got 4 different inputs
+//              for the 4 digits on the board. Its inputs are not directly the binary numbers.
+//              You need to convert 4-bit hex values to their seven segment display equivalents.
+//              The outputs a, b, c, d, e, f, g control the segments of the display.
+//              an0, an1, an2, an3 control which digit is active.
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module ssd(
+    input clk,
+    input reset,
+    input a0, a1, a2, a3,
+    input b0, b1, b2, b3,
+    input c0, c1, c2, c3,
+    input d0, d1, d2, d3,
+    input e0, e1, e2, e3,
+    input f0, f1, f2, f3,
+    input g0, g1, g2, g3,
+    output reg a,
+    output reg b,
+    output reg c,
+    output reg d,
+    output reg e,
+    output reg f,
+    output reg g,
+    output reg an0,
+    output reg an1,
+    output reg an2,
+    output reg an3
+);
+
+reg [2:0] state; // Holds state number (3 bits)
+reg [14:0] counter; // Counter to slow down the input clock
+
+// This always block reduces the clock speed for proper display timing
+always @(posedge clk) begin
+    if (reset) begin
+        state <= 0; // If reset set state and counter to zero
+        counter <= 0;
+    end else begin // Increment counter until it reaches a threshold
+        if (counter == 15'h61A8) begin // If equal to 25000 (adjust as necessary)
+            if (state == 3'b100) // If it is in the last state return to state 1
+                state <= 1;
+            else // Else go one state up
+                state <= state + 1;
+                
+            counter <= 0; // Reset counter after reaching threshold
+        end else
+            counter <= counter + 1; // Increment counter if not at threshold
+    end
+end
+
+// This always block controls which digit is displayed based on current state
+always @(posedge clk) begin
+    if (reset) begin // If reset initialize outputs to default values
+        an0 <= 1;
+        an1 <= 1;
+        an2 <= 1;
+        an3 <= 1;
+        a <= 1;
+        b <= 1;
+        c <= 1;
+        d <= 1;
+        e <= 1;
+        f <= 1;
+        g <= 1;
+    end else begin
+        case (state)
+            3'b001: begin // State for AN0
+                an0 <= 0; an1 <= 1; an2 <= 1; an3 <= 1;
+                a <= a0; b <= b0; c <= c0; d <= d0; e <= e0; f <= f0; g <= g0;
+            end
+            
+            3'b010: begin // State for AN1
+                an0 <= 1; an1 <= 0; an2 <= 1; an3 <= 1;
+                a <= a1; b <= b1; c <= c1; d <= d1; e <= e1; f <= f1; g <= g1;
+            end
+            
+            3'b011: begin // State for AN2
+                an0 <= 1; an1 <= 1; an2 <= 0; an3 <= 1;
+                a <= a2; b <= b2; c <= c2; d <= d2; e <= e2; f <= f2; g <= g2;
+            end
+            
+            3'b100: begin // State for AN3
+                an0 <= 1; an1 <= 1; an2 <= 1; an3 <= 0;
+                a <= a3; b <= b3; c <= c3; d <= d3; e <= e3; f <= f3; g <= g3;
+            end
+            
+            default: begin // Default case to turn off all segments and digits
+                an0 = 1;
+                an1 = 1;
+                an2 = 1;
+                an3 = 1;
+                a = b = c = d = e = f = g = 1;
+            end
+        endcase
+    end
+end
+
+endmodule
