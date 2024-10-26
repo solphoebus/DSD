@@ -1,28 +1,46 @@
-NET "clk" LOC=E3;          # Clock signal (100 MHz)
-NET "reset" LOC=J15 | PULLDOWN; # Reset button with pulldown
+set_property PACKAGE_PIN E3 [get_ports clk]
+set_property IOSTANDARD LVCMOS33 [get_ports clk]
 
-# Button assignments with pulldown resistors
-NET "BTN1" LOC=H17 | PULLDOWN; # Button 1
-NET "BTN2" LOC=H16 | PULLDOWN; # Button 2
-NET "BTN3" LOC=H15 | PULLDOWN; # Button 3
+set_property PACKAGE_PIN C12 [get_ports rst]
+set_property IOSTANDARD LVCMOS33 [get_ports rst]
 
-# Product signals
-NET "product1" LOC=A2;   # Product signal 1
-NET "product2" LOC=A3;   # Product signal 2
-NET "product3" LOC=A4;   # Product signal 3
-NET "delivered" LOC=A5;  # Delivered signal
+set_property PACKAGE_PIN J15 [get_ports {x[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {x[0]}]
+set_property PACKAGE_PIN L16 [get_ports {x[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {x[1]}]
+set_property PACKAGE_PIN M13 [get_ports {x[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {x[2]}]
+set_property PACKAGE_PIN R15 [get_ports {x[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {x[3]}]
 
-# Analog inputs
-NET "an0" LOC=K26;       # Analog input 0
-NET "an1" LOC=K25;       # Analog input 1
-NET "an2" LOC=K24;       # Analog input 2
-NET "an3" LOC=K23;       # Analog input 3
+set_property PACKAGE_PIN J17 [get_ports {an[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {an[0]}]
+set_property PACKAGE_PIN J18 [get_ports {an[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {an[1]}]
+set_property PACKAGE_PIN T9 [get_ports {an[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {an[2]}]
+set_property PACKAGE_PIN J14 [get_ports {an[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {an[3]}]
+set_property PACKAGE_PIN P14 [get_ports {an[4]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {an[4]}]
+set_property PACKAGE_PIN T14 [get_ports {an[5]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {an[5]}]
+set_property PACKAGE_PIN K2 [get_ports {an[6]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {an[6]}]
+set_property PACKAGE_PIN U13 [get_ports {an[7]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {an[7]}]
 
-# Additional signals
-NET "a" LOC=D25;         # Signal a
-NET "b" LOC=D16;         # Signal b
-NET "c" LOC=D23;         # Signal c
-NET "d" LOC=D21;         # Signal d
-NET "e" LOC=D20;         # Signal e
-NET "f" LOC=D17;         # Signal f
-NET "g" LOC=D83;         # Signal g
+set_property PACKAGE_PIN T10 [get_ports {sevseg[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {sevseg[0]}]
+set_property PACKAGE_PIN R10 [get_ports {sevseg[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {sevseg[1]}]
+set_property PACKAGE_PIN K16 [get_ports {sevseg[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {sevseg[2]}]
+set_property PACKAGE_PIN K13 [get_ports {sevseg[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {sevseg[3]}]
+set_property PACKAGE_PIN P15 [get_ports {sevseg[4]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {sevseg[4]}]
+set_property PACKAGE_PIN T11 [get_ports {sevseg[5]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {sevseg[5]}]
+set_property PACKAGE_PIN L18 [get_ports {sevseg[6]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {sevseg[6]}]
