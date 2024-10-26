@@ -1,0 +1,113 @@
+`timescale 1ns / 1ps
+
+module vending_machine(
+    input clk,                // Clock signal
+    input reset,              // Reset signal
+    input BTN1, BTN2, BTN3,  // Button inputs
+    output reg product1,      // Output for product 1 (TEA)
+    output reg product2,      // Output for product 2 (COFFEE)
+    output reg product3,      // Output for product 3 (HOT CHOCOLATE)
+    output reg delivered,      // Output indicating if a product is delivered
+    output reg [6:0] digit1,  // 7-segment display digit 1
+    output reg [6:0] digit2,  // 7-segment display digit 2
+    output reg [6:0] digit3,  // 7-segment display digit 3
+    output reg [6:0] digit4   // 7-segment display digit 4
+);
+
+reg [7:0] insertedMoney;     // Money inserted by the user
+reg [7:0] totalChange;       // Total change to be returned
+reg [7:0] change;            // Change to be given back
+
+// State parameters
+parameter no_coin=0, initial_state=1, tea_0=2, tea_25=3,
+          coffee_0=8, coffee_25=9, hot_0=15, hot_25=16,
+          delivered_state=23;
+
+// SSD encoding for digits
+parameter ssd_0=7'b0000001, ssd_1=7'b1001111,
+          ssd_2=7'b0010010, ssd_3=7'b0000110,
+          ssd_4=7'b1001100, ssd_5=7'b0100010,
+          ssd_6=7'b0100000, ssd_7=7'b1110000,
+          ssd_8=7'b0000000, ssd_not=7'b1111110;
+
+reg [5:0] current_state, next_state;
+
+// Flip-flops for state and money handling
+always @ (posedge clk or posedge reset) begin
+    if (reset) begin
+        current_state <= initial_state;
+        insertedMoney <= 8'b00000000;
+        totalChange <= 8'b00000000;
+        change <= 8'b00000000;
+        digit1 <= ssd_not; 
+        digit2 <= ssd_not; 
+        digit3 <= ssd_not; 
+        digit4 <= ssd_not; 
+        product1 <= 0;
+        product2 <= 0;
+        product3 <= 0;
+        delivered <= 0;
+    end else begin
+        if (current_state != initial_state) begin
+            if (BTN1) insertedMoney = insertedMoney + 8'd25; 
+            else if (BTN2) insertedMoney = insertedMoney + 8'd50;
+            else if (BTN3) insertedMoney = insertedMoney + 8'd100;
+        end
+        
+        current_state <= next_state;
+        totalChange = totalChange + change;
+
+        if (current_state != delivered_state) begin
+            case (insertedMoney)
+                8'b00000000: begin digit1 = ssd_0; digit2 = ssd_0; end
+                8'b00011001: begin digit1 = ssd_1; digit2 = ssd_2; end
+                // Add more cases as needed...
+                default: begin digit1 = ssd_not; digit2 = ssd_not; end
+            endcase
+        end else begin
+            digit1 = ssd_not;
+            digit2 = ssd_not;
+            // Handle totalChange display logic...
+        end
+    end
+end
+
+// Next state and output combinational logic
+always @ * begin
+    case (current_state)
+        initial_state: begin
+            delivered = 0;
+            change = 8'b00000000;
+
+            if (BTN1) begin
+                product1 = 1;
+                product2 = 0;
+                product3 = 0;
+                next_state = tea_0;
+            end else if (BTN2) begin
+                product1 = 0;
+                product2 = 1;
+                product3 = 0;
+                next_state = coffee_0;
+            end else if (BTN3) begin
+                product1 = 0;
+                product2 = 0;
+                product3 = 1;
+                next_state = hot_0;
+            end else begin
+                next_state = initial_state;
+            end
+        end
+
+        // Additional states handling...
+        
+        delivered_state: begin
+            next_state = delivered_state;
+            change = 8'b00000000;
+            delivered = 1;
+        end
+
+    endcase
+end
+
+endmodule
