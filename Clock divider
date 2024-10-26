@@ -1,0 +1,44 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date:    00:00:27 01/13/2011 
+// Design Name: 
+// Module Name:    clk_divider 
+// Project Name: 
+// Target Devices: Nexys 4 DDR
+// Tool versions: 
+// Description: This module divides the input clock frequency to produce a slower output clock.
+//              The `toggle_value` parameter defines the division factor.
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module clk_divider(
+    input clk_in,                // Input clock signal
+    input rst,                   // Reset signal
+    output reg divided_clk       // Divided output clock signal
+);
+
+parameter toggle_value = 3000000; // Adjust this value based on desired output frequency
+reg [24:0] cnt;                    // Counter register to count up to toggle_value
+
+always @(posedge clk_in or posedge rst) begin
+    if (rst) begin
+        cnt <= 0;                  // Reset counter
+        divided_clk <= 0;         // Reset divided clock output
+    end else begin
+        if (cnt == toggle_value - 1) begin // Check if counter reached toggle_value - 1
+            cnt <= 0;              // Reset counter
+            divided_clk <= ~divided_clk; // Toggle the divided clock output
+        end else begin
+            cnt <= cnt + 1;        // Increment counter
+        end
+    end
+end
+
+endmodule
