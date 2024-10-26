@@ -1,15 +1,17 @@
-module vending(clk, rst, x, z, dc, an, sevseg);
-    input clk, rst;
-    input [3:0] x;               // Input for product selection and coin insertion
-    output dc;                   // Divided clock output
-    output reg [1:0] z;          // Output indicating product status
-    output [7:0] an;             // Anode signals for SSD
-    output reg [0:6] sevseg;     // 7-segment display output
-
-    reg [2:0] prs, nex;          // Present and next states
-    reg [28:0] clk_div;          // Clock divider counter
-    reg clkd;                    // Divided clock signal
-    reg [3:0] dis;               // Display value for SSD
+module vending(
+    input clk,
+    input rst,
+    input [3:0] x,          // Coin input (SW3-SW0 on Nexys 4 DDR)
+    output reg [1:0] z,     // Product output indicator
+    output dc,              // Divided clock signal
+    output [7:0] an,        // Anodes for seven-segment display
+    output reg [0:6] sevseg // Seven-segment display output
+);
+    reg [3:0] prs;          // Present state
+    reg [3:0] nex;          // Next state
+    reg [28:0] clk_div;     // Clock divider counter
+    reg clkd;               // Divided clock
+    reg [3:0] dis;          // Display value
 
     // Clock Divider
     always @(posedge clk or negedge rst) begin
@@ -19,68 +21,91 @@ module vending(clk, rst, x, z, dc, an, sevseg);
             clk_div <= clk_div + 1;
         clkd <= clk_div[28];
     end
-
     assign dc = clkd;
 
-    // State Machine for two products
-    always @(prs or x) begin
+    // State Machine Logic
+    always @(prs, x) begin
         case (prs)
+            // Initial state
             0: begin
                 z <= 2'b00;
                 dis <= 4'b0000;
-                if (x == 4'b0001)
-                    nex <= 1;
-                else if (x == 4'b0010)
-                    nex <= 2;
-                else if (x == 4'b0100)
-                    nex <= 5;
-                else
-                    nex <= 0;
+                if (x == 4'b0001)       nex <= 1;   // Coin for Item 1
+                else if (x == 4'b0010)  nex <= 2;
+                else if (x == 4'b0100)  nex <= 5;
+                else if (x == 4'b1001)  nex <= 6;   // Coin for Item 2
+                else if (x == 4'b1010)  nex <= 7;
+                else if (x == 4'b1100)  nex <= 10;
+                else if (x == 4'b0110)  nex <= 11;  // Coin for Item 3
+                else if (x == 4'b1110)  nex <= 12;
+                else nex <= 0;
             end
+            // States for Item 1 (with product display)
             1: begin
                 z <= 2'b00;
-                dis <= 4'b0001;
-                if (x == 4'b0001)
-                    nex <= 2;
-                else if (x == 4'b0010)
-                    nex <= 3;
-                else
-                    nex <= 1;
+                dis <= 4'b0001; // Display amount
+                if (x == 4'b0001) nex <= 2;
+                else if (x == 4'b0010) nex <= 3;
+                else nex <= 1;
             end
             2: begin
                 z <= 2'b00;
                 dis <= 4'b0010;
-                if (x == 4'b0001)
-                    nex <= 3;
-                else if (x == 4'b0010)
-                    nex <= 4;
-                else
-                    nex <= 2;
+                if (x == 4'b0001) nex <= 3;
+                else if (x == 4'b0010) nex <= 4;
+                else nex <= 2;
             end
             3: begin
-                z <= 2'b10;  // Product 1 selected and paid for
+                z <= 2'b10;   // Product 1 delivered
+                dis <= 4'b0001;  // Display "1" for Product 1
+                nex <= 0;
+            end
+            // States for Item 2 (with product display)
+            6: begin
+                z <= 2'b00;
+                dis <= 4'b0001;
+                if (x == 4'b1001) nex <= 7;
+                else if (x == 4'b1010) nex <= 8;
+                else nex <= 6;
+            end
+            7: begin
+                z <= 2'b00;
+                dis <= 4'b0010;
+                if (x == 4'b1001) nex <= 8;
+                else if (x == 4'b1010) nex <= 9;
+                else nex <= 7;
+            end
+            8: begin
+                z <= 2'b00;
                 dis <= 4'b0011;
+                if (x == 4'b1001) nex <= 9;
+                else if (x == 4'b1010) nex <= 10;
+                else nex <= 8;
+            end
+            9: begin
+                z <= 2'b10;    // Product 2 delivered
+                dis <= 4'b0010; // Display "2" for Product 2
                 nex <= 0;
             end
-            4: begin
-                z <= 2'b11;  // Product 2 selected and paid for
-                dis <= 4'b0100;
-                nex <= 0;
+            // States for Item 3 (with product display)
+            11: begin
+                z <= 2'b00;
+                dis <= 4'b0001;
+                if (x == 4'b0110) nex <= 12;
+                else nex <= 11;
             end
-            5: begin
-                z <= 2'b01;
-                dis <= 4'b0101;
-                nex <= 4;
+            12: begin
+                z <= 2'b11;    // Product 3 delivered
+                dis <= 4'b0011; // Display "3" for Product 3
+                nex <= 0;
             end
             default: begin
-                z <= 2'b00;
-                dis <= 4'b0000;
                 nex <= 0;
             end
         endcase
     end
 
-    // Update Present State on Clock
+    // State Transition on Clock
     always @(posedge clkd or negedge rst) begin
         if (!rst)
             prs <= 0;
@@ -88,28 +113,23 @@ module vending(clk, rst, x, z, dc, an, sevseg);
             prs <= nex;
     end
 
-    // 7-Segment Display Logic
-    always @(dis) begin
+    // Seven-Segment Display Control
+    always @(dis)
         case (dis)
-            4'b0000: sevseg = 7'b0000001;
-            4'b0001: sevseg = 7'b1001111;
-            4'b0010: sevseg = 7'b0010010;
-            4'b0011: sevseg = 7'b0000110;
-            4'b0100: sevseg = 7'b1001100;
-            4'b0101: sevseg = 7'b0100100;
-            4'b0110: sevseg = 7'b0100000;
-            4'b0111: sevseg = 7'b0001111;
-            4'b1000: sevseg = 7'b0000000;
-            4'b1001: sevseg = 7'b0000100;
-            4'b1010: sevseg = 7'b0001000;
-            4'b1011: sevseg = 7'b1100000;
-            4'b1100: sevseg = 7'b0110001;
-            4'b1101: sevseg = 7'b1000010;
-            4'b1110: sevseg = 7'b0110000;
-            4'b1111: sevseg = 7'b0111000;
-            default: sevseg = 7'b1111111;
+            0: sevseg = 7'b0000001;  // Display 0
+            1: sevseg = 7'b1001111;  // Display 1
+            2: sevseg = 7'b0010010;  // Display 2
+            3: sevseg = 7'b0000110;  // Display 3
+            4: sevseg = 7'b1001100;  // Display 4
+            5: sevseg = 7'b0100100;  // Display 5
+            6: sevseg = 7'b0100000;  // Display 6
+            7: sevseg = 7'b0001111;  // Display 7
+            8: sevseg = 7'b0000000;  // Display 8
+            9: sevseg = 7'b0000100;  // Display 9
+            default: sevseg = 7'b1111111;  // Blank display
         endcase
-    end
 
+    // Set only one anode active (AN0)
     assign an = 8'b11111110;
+
 endmodule
